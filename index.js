@@ -39,7 +39,7 @@ const readFile = universalify.fromPromise(_readFile)
 
 function readFileSync (file, options = {}) {
   if (typeof options === 'string') {
-    options = { encoding: options }
+       options = {}
   }
 
   const fs = options.fs || _fs

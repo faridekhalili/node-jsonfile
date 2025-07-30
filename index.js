@@ -9,7 +9,7 @@ const { stringify, stripBom } = require('./utils')
 
 async function _readFile (file, options = {}) {
   if (typeof options === 'string') {
-    options = { encoding: options }
+       options = {}
   }
 
   const fs = options.fs || _fs

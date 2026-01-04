@@ -1,27 +1,31 @@
 // Simulate the scenario where `graceful-fs` is not available
 jest.mock('graceful-fs', () => {
-  throw new Error('Cannot find module "graceful-fs"');
-}, { virtual: true });
+  throw new Error('Cannot find module "graceful-fs"')
+}, { virtual: true })
 
 // Ensure that `fs` can be loaded as a fallback
-jest.mock('fs', () => jest.requireActual('fs'), { virtual: true });
+jest.mock('fs', () => jest.requireActual('fs'), { virtual: true })
 
-const jsonfile = require('../');
-const mockFs = require('mock-fs');
-  
+const jsonfile = require('../')
+const mockFs = require('mock-fs')
+const rimraf = require('rimraf')
+const os = require('os')
+const path = require('path')
+const fs = require('fs')
+
 describe('jsonfile operations', () => {
   beforeEach(() => {
     // Setup mock filesystem
     mockFs({
       'example.json': '{"name":"test"}'
-    });
-  });
+    })
+  })
 
   afterEach(() => {
     // Restore the filesystem after each test
-    mockFs.restore();
-    jest.resetModules(); // Reset modules to clear caches and mocks
-  });
+    mockFs.restore()
+    jest.resetModules() // Reset modules to clear caches and mocks
+  })
 
   test('readFile should fallback to native fs when graceful-fs fails', async () => {
     /**
@@ -33,23 +37,23 @@ describe('jsonfile operations', () => {
      * - }
      * + } catch (_) {}
     */
-    
-    let data;
-    let errorCaught = false;
+
+    let data
+    let errorCaught = false
     try {
-      data = await jsonfile.readFile('example.json');
+      data = await jsonfile.readFile('example.json')
     } catch (error) {
-      errorCaught = true;
+      errorCaught = true
     }
 
-    expect(errorCaught).toBe(false);
-    expect(data).toEqual({ name: 'test' });
-  });
-});
+    expect(errorCaught).toBe(false)
+    expect(data).toEqual({ name: 'test' })
+  })
+})
 
 describe('stripBom function tests', () => {
-  const { stripBom } = require('../utils');
-  
+  const { stripBom } = require('../utils')
+
   test('should throw an error when content is an object, not a buffer', () => {
     /**
      * Sample 1
@@ -58,11 +62,11 @@ describe('stripBom function tests', () => {
     * - if (Buffer.isBuffer(content)) content = content.toString('utf8')
     * + if (true) content = content.toString('utf8')
     */
-    const inputObject = { toString: () => "Hello, world!" }; // A mock object with a custom toString method
+    const inputObject = { toString: () => 'Hello, world!' } // A mock object with a custom toString method
     expect(() => {
-      stripBom(inputObject);
-    }).toThrow(TypeError);
-  });
+      stripBom(inputObject)
+    }).toThrow(TypeError)
+  })
 
   test('should not remove the BOM if it is not at the beginning of the string', () => {
     /**
@@ -72,30 +76,24 @@ describe('stripBom function tests', () => {
      * -     return content.replace(/^\\uFEFF/, '')
      * +     return content.replace(/\\uFEFF/, '')
      */
-    input = `Some \uFEFF content\uFEFF with BOM inside`
-    const result = stripBom(Buffer.from(input, 'utf8'));
-    expect(result).toBe(input);
-  });
-  
-});
+    const input = `Some \uFEFF content\uFEFF with BOM inside`
+    const result = stripBom(Buffer.from(input, 'utf8'))
+    expect(result).toBe(input)
+  })
+})
 
 describe('Encoding Handling in readFile()', () => {
-  rimraf = require('rimraf');
-  os = require('os');
-  path = require('path');
-  const jsonfile = require('../');
-  fs = require('fs');
-  let TEST_DIR;
+  let TEST_DIR
 
   beforeEach(() => {
-    TEST_DIR = path.join(os.tmpdir(), 'jsonfile-tests-encoding');
-    rimraf.sync(TEST_DIR);
-    fs.mkdirSync(TEST_DIR);
-  });
+    TEST_DIR = path.join(os.tmpdir(), 'jsonfile-tests-encoding')
+    rimraf.sync(TEST_DIR)
+    fs.mkdirSync(TEST_DIR)
+  })
 
   afterEach(() => {
-    rimraf.sync(TEST_DIR);
-  });
+    rimraf.sync(TEST_DIR)
+  })
 
   test('should respect encoding option when passed as a string', async () => {
     /**
@@ -105,40 +103,35 @@ describe('Encoding Handling in readFile()', () => {
      * -       options = { encoding: options }
      * +       options = {}
      */
-    
-    const file = path.join(TEST_DIR, 'encoding-test.json');
-    const obj = { message: 'hello' };
+
+    const file = path.join(TEST_DIR, 'encoding-test.json')
+    const obj = { message: 'hello' }
 
     // Write file in UTF-16LE encoding
-    fs.writeFileSync(file, JSON.stringify(obj), 'utf16le');
+    fs.writeFileSync(file, JSON.stringify(obj), 'utf16le')
 
     // Attempt to read file with correct encoding
-    const data = await jsonfile.readFile(file, 'utf16le');
+    const data = await jsonfile.readFile(file, 'utf16le')
 
     // Verify it is parsed correctly
-    expect(data).toEqual(obj);
-  });
-});
+    expect(data).toEqual(obj)
+  })
+})
 
 describe('Encoding Handling in readFileSync()', () => {
-rimraf = require('rimraf');
-os = require('os');
-path = require('path');
-const jsonfile = require('../');
-fs = require('fs');
-let TEST_DIR;
+  let TEST_DIR
 
-beforeEach(() => {
-    TEST_DIR = path.join(os.tmpdir(), 'jsonfile-tests-encoding');
-    rimraf.sync(TEST_DIR);
-    fs.mkdirSync(TEST_DIR);
-});
+  beforeEach(() => {
+    TEST_DIR = path.join(os.tmpdir(), 'jsonfile-tests-encoding')
+    rimraf.sync(TEST_DIR)
+    fs.mkdirSync(TEST_DIR)
+  })
 
-afterEach(() => {
-    rimraf.sync(TEST_DIR);
-});
+  afterEach(() => {
+    rimraf.sync(TEST_DIR)
+  })
 
-test('should respect encoding option when passed as a string in readFileSync', () => {
+  test('should respect encoding option when passed as a string in readFileSync', () => {
     /**
      * Sample 5
      * ObjectLiteral
@@ -146,17 +139,17 @@ test('should respect encoding option when passed as a string in readFileSync', (
      * -       options = { encoding: options }
      * +       options = {}
      */
-  
-    const file = path.join(TEST_DIR, 'encoding-test-sync.json');
-    const obj = { message: 'hello' };
+
+    const file = path.join(TEST_DIR, 'encoding-test-sync.json')
+    const obj = { message: 'hello' }
 
     // Write file in UTF-16LE encoding
-    fs.writeFileSync(file, JSON.stringify(obj), 'utf16le');
+    fs.writeFileSync(file, JSON.stringify(obj), 'utf16le')
 
     // Attempt to read file with correct encoding
-    const data = jsonfile.readFileSync(file, 'utf16le');
+    const data = jsonfile.readFileSync(file, 'utf16le')
 
     // Verify it is parsed correctly
-    expect(data).toEqual(obj);
-});
-});
+    expect(data).toEqual(obj)
+  })
+})

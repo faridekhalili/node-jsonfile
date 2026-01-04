@@ -23,6 +23,7 @@
     "graceful-fs": "^4.1.6"
   },
   "devDependencies": {
+    "jest": "^26.6.3",
     "mocha": "^8.2.0",
     "mock-fs": "^5.5.0",
     "rimraf": "^2.4.0",
@@ -36,6 +37,8 @@
   "scripts": {
     "lint": "standard",
     "test": "npm run lint && npm run unit",
-    "unit": "mocha"
+    "unit": "npm run test:jest && npm run test:mocha",
+    "test:jest": "jest test/augmented.test.js",
+    "test:mocha": "mocha --exclude test/augmented.test.js"
   }
 }
